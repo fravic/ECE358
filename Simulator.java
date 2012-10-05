@@ -35,9 +35,6 @@ class Simulator {
     private int _totalPacketProcessTime;
     
 
-    /* Initialise important terms such as t_arrival = exponential r.v, # of pkts in queue = 0,
-       t_departure = t_arrival ( this implies that first time departure will be called as soon as a 
-       packet arrives in the queue */
     public Simulator(int packetsPerSecond, int packetLength, int transmissionRate) {
         _packetsPerSecond = packetsPerSecond;
         _packetLength = packetLength;
@@ -47,7 +44,6 @@ class Simulator {
         _nextArrivalTime = 0;
         _serviceStartTime = -1; // Begin not servicing
         _serviceTime = (int)(((double)_packetLength / (double)_transmissionRate) * MICROSECONDS);
-        System.out.println("Service time " + _serviceTime);
     }
 
     public void startSimulation(int ticks) {
