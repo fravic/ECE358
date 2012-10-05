@@ -57,8 +57,6 @@ class Simulator {
         for (int t = 1; t <= ticks * MICROSECONDS; t++) {
             arrival(t);
             departure(t);
-
-            _totalPacketsInQueue += _queue.size();
         }
         computePerformance(ticks * MICROSECONDS);
     }
@@ -75,6 +73,8 @@ class Simulator {
        queue is non-empty delete the packet from the queue after an elapse of the 
        deterministic service time. */
     private void departure(int t) {
+        _totalPacketsInQueue += _queue.size();
+
         // If the queue is empty, we have some idle time
         if (_queue.peek() == null) {
             return;
@@ -121,7 +121,7 @@ class Simulator {
         System.out.println("Average sojurn time: " + (_totalSojurnTime / (double)_numPacketsProcessed));
 
         // Percentage idle time
-        System.out.println("Percentage idle time: " + ((_totalBusyTime / (double)ticks) * 100) + "%");
+        System.out.println("Percentage idle time: " + ((1 - (_totalBusyTime / (double)ticks)) * 100) + "%");
 
         // Packet loss probability
     }
