@@ -6,6 +6,7 @@
   - lambda: Average number of packets generated/arrived per second
   - L: Length of each packet
   - C: Transmission rate of the output link in bits per second
+  - k: Buffer size limit, or 0 for infinite
 
   Example usage: java Simulator 5000 5 10 50
 */
@@ -22,6 +23,7 @@ class Simulator {
     private int _packetsPerSecond;
     private int _packetLength;
     private int _transmissionRate;
+    private int _bufferSizeLimit;
 
     // Utility vars
     private Queue _queue;
@@ -30,16 +32,17 @@ class Simulator {
     private int _serviceTime;
     
     // Performance metrics
-    private int _totalPacketsInQueue;
-    private int _numPacketsProcessed;
-    private int _totalSojurnTime;
-    private int _totalBusyTime;
-    
+    private long _cumulativePacketsInQueue;
+    private long _numPacketsProcessed;
+    private long _totalSojurnTime;
+    private long _totalIdleTime;
+    private long _numPacketsDropped;
 
-    public Simulator(int packetsPerSecond, int packetLength, int transmissionRate) {
+    public Simulator(int packetsPerSecond, int packetLength, int transmissionRate, int bufferSizeLimit) {
         _packetsPerSecond = packetsPerSecond;
         _packetLength = packetLength;
         _transmissionRate = transmissionRate;
+        _bufferSizeLimit = bufferSizeLimit;
 
         _queue = new LinkedList<Integer>();
         _nextArrivalTime = 0;
@@ -49,12 +52,13 @@ class Simulator {
     }
 
     public void startSimulation(int ticks) {
-        _totalPacketsInQueue = 0;
+        _cumulativePacketsInQueue = 0;
         _numPacketsProcessed = 0;
-        _totalBusyTime = 0;
+        _totalIdleTime = 0;
         _totalSojurnTime = 0;
+        _numPacketsDropped = 0;
 
-        for (int t = 1; t <= ticks * MICROSECONDS; t++) {
+        for (int t = 0; t < ticks * MICROSECONDS; t++) {
             arrival(t);
             departure(t);
         }
@@ -65,7 +69,11 @@ class Simulator {
        queue (an array or a linked list) */
     private void arrival(int t) {
         if (shouldGeneratePacket(t)) {
-            _queue.add(new Integer(t));
+            if (_bufferSizeLimit <= 0 || (_queue.size() < _bufferSizeLimit)) {
+                _queue.add(new Integer(t));
+            } else {
+                _numPacketsDropped++;
+            }
         }
     }
 
@@ -73,10 +81,11 @@ class Simulator {
        queue is non-empty delete the packet from the queue after an elapse of the 
        deterministic service time. */
     private void departure(int t) {
-        _totalPacketsInQueue += _queue.size();
+        _cumulativePacketsInQueue += _queue.size();
 
         // If the queue is empty, we have some idle time
         if (_queue.peek() == null) {
+            _totalIdleTime++;
             return;
         }
 
@@ -88,13 +97,9 @@ class Simulator {
             int packetStartTime = ((Integer)_queue.remove()).intValue();
             _totalSojurnTime += t - packetStartTime; 
             _numPacketsProcessed++;
-            _totalBusyTime++;
 
             // Stop servicing
             _serviceStartTime = -1;
-        } else {
-            // Still servicing
-            _totalBusyTime++;
         }
     }
 
@@ -115,15 +120,16 @@ class Simulator {
 
     private void computePerformance(int ticks) {
         // Average number of packets in queue
-        System.out.println("Avergae number of packets in queue: " + (_totalPacketsInQueue / (double)ticks));
+        System.out.println("Avergae number of packets in queue: " + (_cumulativePacketsInQueue / (double)ticks));
         
         // Average time spent in queue per packet
         System.out.println("Average sojurn time: " + (_totalSojurnTime / (double)_numPacketsProcessed));
 
         // Percentage idle time
-        System.out.println("Percentage idle time: " + ((1 - (_totalBusyTime / (double)ticks)) * 100) + "%");
+        System.out.println("Percentage idle time: " + ((_totalIdleTime / (double)ticks) * 100) + "%");
 
         // Packet loss probability
+        System.out.println("Packet loss proability: " + ((_numPacketsDropped / (double)(_numPacketsDropped + _numPacketsProcessed)) * 100) + "%");
     }
 
     public static void main(String[] argv) {
@@ -132,10 +138,16 @@ class Simulator {
             System.exit(0);
         }
 
+        int bufferSizeLimit = 0;
+        if (argv.length >= 5) {
+            bufferSizeLimit = Integer.parseInt(argv[4]);
+        }
+
         Simulator s = new Simulator(
                                     Integer.parseInt(argv[1]),
                                     Integer.parseInt(argv[2]),
-                                    Integer.parseInt(argv[3])
+                                    Integer.parseInt(argv[3]),
+                                    bufferSizeLimit
                                     );
         s.startSimulation(Integer.parseInt(argv[0]));
         
