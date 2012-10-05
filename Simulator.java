@@ -60,18 +60,7 @@ class Simulator {
 
             _totalPacketsInQueue += _queue.size();
         }
-        computePerformance(ticks);
-    }
-
-    public void testRandomNumberGenerator() {
-        // Ensure proper random number generation
-        double total = 0;
-
-        System.out.println("Testing random number generator...");
-        for (int i = 0; i < 1000; i++) {
-            total += generateArrivalTime();
-        }
-        System.out.println("Mean: (expected 0.01):" + (total/1000));
+        computePerformance(ticks * MICROSECONDS);
     }
 
     /* Generate a packet as per the exponential distribution and insert the packet in the 
@@ -148,7 +137,7 @@ class Simulator {
                                     Integer.parseInt(argv[2]),
                                     Integer.parseInt(argv[3])
                                     );
-         s.startSimulation(Integer.parseInt(argv[0]));
+        s.startSimulation(Integer.parseInt(argv[0]));
         
         System.exit(0);
     }
