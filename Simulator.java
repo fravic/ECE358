@@ -48,7 +48,7 @@ class Simulator {
         _nextArrivalTime = 0;
         _serviceStartTime = -1; // Begin not servicing
         _serviceTime = (int)(((double)_packetLength / (double)_transmissionRate) * MICROSECONDS);
-        System.out.println("Service time " + _serviceTime);
+        System.out.println("Service time: " + _serviceTime);
     }
 
     public void startSimulation(int ticks) {
