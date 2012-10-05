@@ -32,7 +32,8 @@ class Simulator {
     // Performance metrics
     private int _totalPacketsInQueue;
     private int _numPacketsProcessed;
-    private int _totalPacketProcessTime;
+    private int _totalSojurnTime;
+    private int _totalBusyTime;
     
 
     public Simulator(int packetsPerSecond, int packetLength, int transmissionRate) {
@@ -44,12 +45,14 @@ class Simulator {
         _nextArrivalTime = 0;
         _serviceStartTime = -1; // Begin not servicing
         _serviceTime = (int)(((double)_packetLength / (double)_transmissionRate) * MICROSECONDS);
+        System.out.println("Service time " + _serviceTime);
     }
 
     public void startSimulation(int ticks) {
         _totalPacketsInQueue = 0;
         _numPacketsProcessed = 0;
-        _totalPacketProcessTime = 0;
+        _totalBusyTime = 0;
+        _totalSojurnTime = 0;
 
         for (int t = 1; t <= ticks * MICROSECONDS; t++) {
             arrival(t);
@@ -75,7 +78,7 @@ class Simulator {
        queue (an array or a linked list) */
     private void arrival(int t) {
         if (shouldGeneratePacket(t)) {
-            _queue.add(new Integer(1));
+            _queue.add(new Integer(t));
         }
     }
 
@@ -88,19 +91,21 @@ class Simulator {
             return;
         }
 
-        // The service time is lambda * L / C
-
-        
         // Otherwise, if we're not servicing yet, start servicing
         if (_serviceStartTime < 0) {
             _serviceStartTime = t;
         } else if (t >= _serviceStartTime + _serviceTime) {
             // Done servicing, remove from queue
-            _queue.remove();
+            int packetStartTime = ((Integer)_queue.remove()).intValue();
+            _totalSojurnTime += t - packetStartTime; 
             _numPacketsProcessed++;
+            _totalBusyTime++;
+
+            // Stop servicing
+            _serviceStartTime = -1;
         } else {
             // Still servicing
-            _totalPacketProcessTime++;
+            _totalBusyTime++;
         }
     }
 
@@ -124,10 +129,10 @@ class Simulator {
         System.out.println("Avergae number of packets in queue: " + (_totalPacketsInQueue / (double)ticks));
         
         // Average time spent in queue per packet
-        System.out.println("Average time spent in queue: " + (_numPacketsProcessed / (double)_totalPacketProcessTime));
+        System.out.println("Average sojurn time: " + (_totalSojurnTime / (double)_numPacketsProcessed));
 
         // Percentage idle time
-        System.out.println("Percentage idle time: " + (_totalPacketProcessTime / (double)ticks * 100) + "%");
+        System.out.println("Percentage idle time: " + ((_totalBusyTime / (double)ticks) * 100) + "%");
 
         // Packet loss probability
     }
