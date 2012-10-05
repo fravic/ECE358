@@ -2,9 +2,9 @@
   Simulator.java
 
   Arguments
-  - n: Number of ticks to perform
+  - n: Number of ticks to perform, in seconds (NOT MICROSECONDS)
   - lambda: Average number of packets generated/arrived per second
-  - L: Length of each packet
+  - L: Length of each packet, in bits
   - C: Transmission rate of the output link in bits per second
   - k: Buffer size limit, or 0 for infinite
 
