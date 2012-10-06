@@ -51,18 +51,18 @@ class Simulator {
         System.out.println("Service time: " + _serviceTime);
     }
 
-    public void startSimulation(int ticks) {
+    public void startSimulation(int T) {
         _cumulativePacketsInQueue = 0;
         _numPacketsProcessed = 0;
         _totalIdleTime = 0;
         _totalSojurnTime = 0;
         _numPacketsDropped = 0;
 
-        for (int t = 0; t < ticks * MICROSECONDS; t++) {
+        for (int t = 0; t < T * MICROSECONDS; t++) {
             arrival(t);
             departure(t);
         }
-        computePerformance(ticks * MICROSECONDS);
+        computePerformance(T * MICROSECONDS);
     }
 
     /* Generate a packet as per the exponential distribution and insert the packet in the 
@@ -134,7 +134,7 @@ class Simulator {
 
     public static void main(String[] argv) {
         if (argv.length < 4) {
-            System.out.println("Usage: java Simulator n lambda L C");
+            System.out.println("Usage: java Simulator T lambda L C");
             System.exit(0);
         }
 
