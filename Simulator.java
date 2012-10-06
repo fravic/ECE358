@@ -134,7 +134,7 @@ class Simulator {
 
     public static void main(String[] argv) {
         if (argv.length < 4) {
-            System.out.println("Usage: java Simulator T lambda L C");
+            System.out.println("Usage: java Simulator T lambda L C(bits) K(optional)");
             System.exit(0);
         }
 
